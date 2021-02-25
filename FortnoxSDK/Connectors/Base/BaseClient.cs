@@ -30,11 +30,16 @@ namespace Fortnox.SDK.Connectors.Base
             HttpClient = FortnoxClient.HttpClientSharedInstance;
             ErrorHandler = new ErrorHandler();
 
+#pragma warning disable 618
             AccessToken = ConnectionCredentials.AccessToken;
             ClientSecret = ConnectionCredentials.ClientSecret;
+#pragma warning restore 618
+
             UseRateLimiter = true;
             UseAuthHeaders = true;
         }
+
+        public static event Action<HttpRequestMessage> RequestPeekerEvent;
 
         public async Task<byte[]> SendAsync(HttpRequestMessage request)
         {
@@ -48,6 +53,8 @@ namespace Fortnox.SDK.Connectors.Base
 
                 if (UseRateLimiter)
                     await Throttle();
+
+                RequestPeekerEvent?.Invoke(request);
 
                 using var response = await HttpClient.SendAsync(request).ConfigureAwait(false);
 
@@ -84,5 +91,6 @@ namespace Fortnox.SDK.Connectors.Base
                 return RateLimiters[accessToken];
             }
         }
+
     }
 }
